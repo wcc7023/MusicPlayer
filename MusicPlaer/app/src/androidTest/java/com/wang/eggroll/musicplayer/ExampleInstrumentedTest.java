@@ -1,4 +1,4 @@
-package com.wang.eggroll.musicplaer;
+package com.wang.eggroll.musicplayer;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("com.wang.eggroll.musicplaer", appContext.getPackageName());
+        assertEquals("com.wang.eggroll.musicplayer", appContext.getPackageName());
     }
 }

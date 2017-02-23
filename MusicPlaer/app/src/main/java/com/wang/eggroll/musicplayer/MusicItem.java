@@ -1,4 +1,4 @@
-package com.wang.eggroll.musicplaer;
+package com.wang.eggroll.musicplayer;
 
 import android.net.Uri;
 
