@@ -27,6 +27,13 @@ public class MainActivity extends AppCompatActivity {
     private long musicDurationBefore;
     private Uri musicUri;
     private Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+    private MediaPlayer mediaPlayer = new MediaPlayer();
+//    private boolean isPaused = false;
+    private MusicItem currentMusicItem;
+
+    private Button playBtn;
+    private Button playNextBtn;
+    private Button playPreBtn;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,22 +45,48 @@ public class MainActivity extends AppCompatActivity {
 
         Adapter adapter = new Adapter(musicItemList);
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+
+        playBtn = (Button) findViewById(R.id.play_btn);
+        playNextBtn = (Button) findViewById(R.id.next_btn);
+        playPreBtn = (Button) findViewById(R.id.previous_btn);
+
+        playBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                MusicItem musicItem = musicItemList.get(position);
-                MediaPlayer mediaPlayer = new MediaPlayer();
-                try{
-                    mediaPlayer.reset();
-                    mediaPlayer.setDataSource(MainActivity.this, musicItem.musicUri);
-                    mediaPlayer.prepare();
-                    mediaPlayer.start();
-                }
-                catch (IOException e){
-                    e.printStackTrace();
-                }
+            public void onClick(View v) {
+                play();
             }
         });
+
+        playNextBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playNext();
+            }
+        });
+
+        playPreBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                playPre();
+            }
+        });
+
+//        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                MusicItem musicItem = musicItemList.get(position);
+//                MediaPlayer mediaPlayer = new MediaPlayer();
+//                try{
+//                    mediaPlayer.reset();
+//                    mediaPlayer.setDataSource(MainActivity.this, musicItem.musicUri);
+//                    mediaPlayer.prepare();
+//                    mediaPlayer.start();
+//                }
+//                catch (IOException e){
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
     }
 
     private void loadMusic(){
@@ -98,5 +131,59 @@ public class MainActivity extends AppCompatActivity {
         String times= mSDF.format(date);
 
         return times;
+    }
+
+
+
+    //Code about playing
+    private void prepareToPlay(MusicItem item){
+        try {
+            mediaPlayer.reset();
+            mediaPlayer.setDataSource(MainActivity.this, item.musicUri);
+            mediaPlayer.prepare();
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    private void playMusicItem(MusicItem item){
+        if(item == null){
+            return;
+        }
+        prepareToPlay(item);
+        currentMusicItem = item;
+        mediaPlayer.start();
+//        isPaused = false;
+    }
+
+    private void play(){
+        if(currentMusicItem == null && musicItemList.size() > 0){
+            currentMusicItem = musicItemList.get(0);
+        }
+        playMusicItem(currentMusicItem);
+    }
+
+    private void playNext(){
+        int currentIndex = musicItemList.indexOf(currentMusicItem);
+
+        if(currentIndex == musicItemList.size() - 1){
+            currentIndex = 0;
+        }else {
+            currentIndex++;
+        }
+        currentMusicItem = musicItemList.get(currentIndex);
+        playMusicItem(currentMusicItem);
+    }
+
+    private void playPre(){
+        int currentIndex = musicItemList.indexOf(currentMusicItem);
+
+        if(currentIndex == 0){
+            currentIndex = musicItemList.size() - 1;
+        }else {
+            currentIndex--;
+        }
+        currentMusicItem = musicItemList.get(currentIndex);
+        playMusicItem(currentMusicItem);
     }
 }
