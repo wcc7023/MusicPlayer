@@ -4,11 +4,14 @@ import android.content.ContentResolver;
 import android.database.Cursor;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.*;
+
+import org.w3c.dom.Text;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -30,17 +33,36 @@ public class MainActivity extends AppCompatActivity {
     private MediaPlayer mediaPlayer = new MediaPlayer();
 //    private boolean isPaused = false;
     private MusicItem currentMusicItem;
+    private SeekBar seekBar;
+    private TextView totalTime;
+    private TextView currentTime;
 
     private Button playBtn;
     private Button playNextBtn;
     private Button playPreBtn;
+
+    private Handler handler = new Handler();
+    private Runnable updateThread = new Runnable() {
+        @Override
+        public void run() {
+            seekBar.setProgress(mediaPlayer.getCurrentPosition());
+            currentTime.setText(convertMSecendToTime(mediaPlayer.getCurrentPosition()));
+            handler.postDelayed(updateThread, 100);
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        seekBar = (SeekBar) findViewById(R.id.seek_bar);
+        totalTime = (TextView) findViewById(R.id.total_time);
+        currentTime = (TextView) findViewById(R.id.current_time);
+
         ListView listView = (ListView) findViewById(R.id.list_view);
+
+
         loadMusic();
 
         Adapter adapter = new Adapter(musicItemList);
@@ -89,51 +111,6 @@ public class MainActivity extends AppCompatActivity {
 //        });
     }
 
-    private void loadMusic(){
-
-        ContentResolver contentResolver = getContentResolver();
-
-        String[] projection = {
-                MediaStore.Audio.Media._ID,
-                MediaStore.Audio.Media.TITLE,
-                MediaStore.Audio.Media.ARTIST,
-                MediaStore.Audio.Media.ALBUM,
-                MediaStore.Audio.Media.DURATION
-        };
-
-        Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, projection, null, null, null);
-
-        if(null != cursor){
-            while (cursor.moveToNext()){
-                id = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
-                musicName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-                musicAlbum = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
-                musicArtist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-                musicDurationBefore = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
-
-                musicDuration = convertMSecendToTime(musicDurationBefore);
-
-                musicUri = Uri.withAppendedPath(uri, id);
-
-
-                MusicItem musicItem = new MusicItem(musicName, musicArtist, musicAlbum, musicDuration, musicUri);
-                musicItemList.add(musicItem);
-            }
-            cursor.close();
-        }
-    }
-
-    private String convertMSecendToTime(long time) {
-
-        SimpleDateFormat mSDF = new SimpleDateFormat("mm:ss");
-
-        Date date = new Date(time);
-        String times= mSDF.format(date);
-
-        return times;
-    }
-
-
 
     //Code about playing
     private void prepareToPlay(MusicItem item){
@@ -153,6 +130,9 @@ public class MainActivity extends AppCompatActivity {
         prepareToPlay(item);
         currentMusicItem = item;
         mediaPlayer.start();
+        totalTime.setText(currentMusicItem.getDuration());
+        seekBar.setMax(mediaPlayer.getDuration());
+        handler.post(updateThread);
 //        isPaused = false;
     }
 
@@ -186,4 +166,54 @@ public class MainActivity extends AppCompatActivity {
         currentMusicItem = musicItemList.get(currentIndex);
         playMusicItem(currentMusicItem);
     }
+
+    private String convertMSecendToTime(long time) {
+
+        SimpleDateFormat mSDF = new SimpleDateFormat("mm:ss");
+
+        Date date = new Date(time);
+        String times= mSDF.format(date);
+
+        return times;
+    }
+
+
+    private void loadMusic(){
+
+        ContentResolver contentResolver = getContentResolver();
+
+        String[] projection = {
+                MediaStore.Audio.Media._ID,
+                MediaStore.Audio.Media.TITLE,
+                MediaStore.Audio.Media.ARTIST,
+                MediaStore.Audio.Media.ALBUM,
+                MediaStore.Audio.Media.DURATION
+        };
+
+        Cursor cursor = contentResolver.query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                                projection,
+                                                null,
+                                                null,
+                                                null);
+
+        if(null != cursor){
+            while (cursor.moveToNext()){
+                id = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media._ID));
+                musicName = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+                musicAlbum = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM));
+                musicArtist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+                musicDurationBefore = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+
+                musicDuration = convertMSecendToTime(musicDurationBefore);
+
+                musicUri = Uri.withAppendedPath(uri, id);
+
+
+                MusicItem musicItem = new MusicItem(musicName, musicArtist, musicAlbum, musicDuration, musicUri);
+                musicItemList.add(musicItem);
+            }
+            cursor.close();
+        }
+    }
+
 }
