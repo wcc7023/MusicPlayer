@@ -30,16 +30,20 @@ public class MainActivity extends AppCompatActivity {
     private long musicDurationBefore;
     private Uri musicUri;
     private Uri uri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
-    private MediaPlayer mediaPlayer = new MediaPlayer();
+    public MediaPlayer mediaPlayer = new MediaPlayer();
 //    private boolean isPaused = false;
     private MusicItem currentMusicItem;
     private SeekBar seekBar;
     private TextView totalTime;
     private TextView currentTime;
+    private TextView musicTitle;
 
     private Button playBtn;
     private Button playNextBtn;
     private Button playPreBtn;
+
+    private boolean isPause = false;
+    private boolean reload = true;
 
     private Handler handler = new Handler();
     private Runnable updateThread = new Runnable() {
@@ -60,8 +64,15 @@ public class MainActivity extends AppCompatActivity {
         totalTime = (TextView) findViewById(R.id.total_time);
         currentTime = (TextView) findViewById(R.id.current_time);
 
-        ListView listView = (ListView) findViewById(R.id.list_view);
+        musicTitle = (TextView) findViewById(R.id.music_title);
 
+        final ListView listView = (ListView) findViewById(R.id.list_view);
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                playMusicItem(musicItemList.get(position), true);
+            }
+        });
 
         loadMusic();
 
@@ -93,24 +104,25 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-//            @Override
-//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-//                MusicItem musicItem = musicItemList.get(position);
-//                MediaPlayer mediaPlayer = new MediaPlayer();
-//                try{
-//                    mediaPlayer.reset();
-//                    mediaPlayer.setDataSource(MainActivity.this, musicItem.musicUri);
-//                    mediaPlayer.prepare();
-//                    mediaPlayer.start();
-//                }
-//                catch (IOException e){
-//                    e.printStackTrace();
-//                }
-//            }
-//        });
-    }
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser == true){
+                    mediaPlayer.seekTo(progress);
+                }
+            }
 
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
+    }
 
     //Code about playing
     private void prepareToPlay(MusicItem item){
@@ -118,29 +130,51 @@ public class MainActivity extends AppCompatActivity {
             mediaPlayer.reset();
             mediaPlayer.setDataSource(MainActivity.this, item.musicUri);
             mediaPlayer.prepare();
+            isPause = false;
         }catch (IOException e){
             e.printStackTrace();
         }
     }
 
-    private void playMusicItem(MusicItem item){
+    private void playMusicItem(MusicItem item, boolean reload){
         if(item == null){
             return;
         }
-        prepareToPlay(item);
-        currentMusicItem = item;
+        if (reload){
+            prepareToPlay(item);
+            currentMusicItem = item;
+            playBtn.setText("pause");
+        }
         mediaPlayer.start();
         totalTime.setText(currentMusicItem.getDuration());
         seekBar.setMax(mediaPlayer.getDuration());
+        musicTitle.setText(currentMusicItem.getMusicName());
         handler.post(updateThread);
+//        isPause = true;
 //        isPaused = false;
     }
 
     private void play(){
-        if(currentMusicItem == null && musicItemList.size() > 0){
+        if(currentMusicItem == null && musicItemList.size() > 0 && isPause == false){
             currentMusicItem = musicItemList.get(0);
+            playMusicItem(currentMusicItem, true);
+        }else if (currentMusicItem != null && isPause == false){
+            pause();
+        }else{
+            playFromPause();
         }
-        playMusicItem(currentMusicItem);
+    }
+
+    private void pause(){
+        mediaPlayer.pause();
+        isPause = true;
+        playBtn.setText("play");
+    }
+
+    private void playFromPause(){
+        playMusicItem(currentMusicItem, false);
+        isPause = false;
+        playBtn.setText("pause");
     }
 
     private void playNext(){
@@ -152,7 +186,7 @@ public class MainActivity extends AppCompatActivity {
             currentIndex++;
         }
         currentMusicItem = musicItemList.get(currentIndex);
-        playMusicItem(currentMusicItem);
+        playMusicItem(currentMusicItem, true);
     }
 
     private void playPre(){
@@ -164,7 +198,7 @@ public class MainActivity extends AppCompatActivity {
             currentIndex--;
         }
         currentMusicItem = musicItemList.get(currentIndex);
-        playMusicItem(currentMusicItem);
+        playMusicItem(currentMusicItem, true);
     }
 
     private String convertMSecendToTime(long time) {

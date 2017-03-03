@@ -9,10 +9,17 @@
 
     <ListView
         android:layout_margin="10dp"
-        android:layout_weight="0.15"
+        android:layout_weight="0.25"
         android:id="@+id/list_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"></ListView>
+
+    <TextView
+        android:id="@+id/music_title"
+        android:textSize="32dp"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
 
 
     <LinearLayout
