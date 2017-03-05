@@ -102,6 +102,9 @@ public class MusicService extends Service {
             @Override
             public void onCompletion(MediaPlayer mp) {
                 playNext();
+                sendInfo();
+                Intent initIntent = new Intent("init");
+                sendBroadcast(initIntent);
             }
         });
 
@@ -139,6 +142,12 @@ public class MusicService extends Service {
             playMusicItem(currentMusicItem, false);
 //        isPause = false;
 //        playBtn.setText("pause");
+        }
+
+        public void playSelected(int position){
+            currentMusicItem = MusicItemList.getMusicItemList().get(position);
+            playMusicItem(currentMusicItem, true);
+            sendInfo();
         }
     }
 

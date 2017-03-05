@@ -97,8 +97,13 @@ public class MainActivity extends AppCompatActivity {
 
         IntentFilter intentFilter = new IntentFilter();
         intentFilter.addAction("play");
+        intentFilter.addAction("init");
         musicServiceBroadcastReceiver = new MusicServiceBroadcastReceiver();
         registerReceiver(musicServiceBroadcastReceiver, intentFilter);
+
+        final ListView listView = (ListView) findViewById(R.id.list_view);
+        Adapter adapter = new Adapter(MusicItemList.getMusicItemList());
+        listView.setAdapter(adapter);
 
 
         ServiceConnection serviceConnection = new ServiceConnection() {
@@ -144,6 +149,16 @@ public class MainActivity extends AppCompatActivity {
                         initSeekbar();
                     }
                 });
+
+                listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                        myBinder.playSelected(position);
+                        firstPlay = false;
+                        playBtn.setText("pause");
+                        initSeekbar();
+                    }
+                });
             }
 
             @Override
@@ -167,21 +182,9 @@ public class MainActivity extends AppCompatActivity {
         currentTime = (TextView) findViewById(R.id.current_time);
         musicTitle = (TextView) findViewById(R.id.music_title);
 
-        final ListView listView = (ListView) findViewById(R.id.list_view);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent clickIntent = new Intent("itemClick");
-                clickIntent.putExtra("position", position);
-                sendBroadcast(clickIntent);
-                firstPlay = false;
-                initSeekbar();
-                playBtn.setText("pause");
-            }
-        });
 
-        Adapter adapter = new Adapter(MusicItemList.getMusicItemList());
-        listView.setAdapter(adapter);
+
+
 
 //        playNextBtn.setOnClickListener(new View.OnClickListener() {
 //            @Override
@@ -232,6 +235,8 @@ public class MainActivity extends AppCompatActivity {
                 totalTimeString = intent.getStringExtra("musicDuration");
                 musicTitle.setText(musicTittleString);
                 totalTime.setText(totalTimeString);
+            }else if(TextUtils.equals(action, "init")){
+                initSeekbar();
             }
         }
     }
