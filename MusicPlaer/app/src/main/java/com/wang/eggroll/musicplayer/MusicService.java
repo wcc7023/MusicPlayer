@@ -1,5 +1,7 @@
 package com.wang.eggroll.musicplayer;
 
+import android.app.Notification;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -7,6 +9,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
@@ -16,6 +19,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -54,7 +58,7 @@ public class MusicService extends Service {
 //    private boolean reload = true;
 //    private SeekBar seekBar;
 
-    private MusicActivityBroadcastReceiver musicActivityBroadcastReceiver;
+//    private MusicActivityBroadcastReceiver musicActivityBroadcastReceiver;
 
 //    private Handler handler = new Handler();
 //    private Runnable updateThread = new Runnable() {
@@ -71,6 +75,23 @@ public class MusicService extends Service {
 //    public MusicService(){
 //        messengerHandler = new MessengerHandler();
 //    }
+
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        Intent intent = new Intent(this, MainActivity.class);
+        PendingIntent pi = PendingIntent.getActivity(this, 0, intent, 0);
+        Notification notification = new NotificationCompat.Builder(this)
+                .setContentTitle("This is content title")
+                .setContentText("This is content text")
+                .setWhen(System.currentTimeMillis())
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.mipmap.ic_launcher))
+                .setContentIntent(pi)
+                .build();
+        startForeground(1, notification);
+    }
 
     @Nullable
     @Override
@@ -108,10 +129,10 @@ public class MusicService extends Service {
             }
         });
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction("itemClick");
-        musicActivityBroadcastReceiver = new MusicActivityBroadcastReceiver();
-        registerReceiver(musicActivityBroadcastReceiver, intentFilter);
+//        IntentFilter intentFilter = new IntentFilter();
+//        intentFilter.addAction("itemClick");
+//        musicActivityBroadcastReceiver = new MusicActivityBroadcastReceiver();
+//        registerReceiver(musicActivityBroadcastReceiver, intentFilter);
 
         return new MyBinder();
     }
@@ -285,23 +306,23 @@ public class MusicService extends Service {
         playMusicItem(currentMusicItem, true);
     }
 
-    private class MusicActivityBroadcastReceiver extends BroadcastReceiver{
+//    private class MusicActivityBroadcastReceiver extends BroadcastReceiver{
+//
+//        @Override
+//        public void onReceive(Context context, Intent intent) {
+//            String action = intent.getAction();
+//            if(TextUtils.equals(action, "itemClick")){
+//                int position = intent.getIntExtra("position", 0);
+//                currentMusicItem = MusicItemList.getMusicItemList().get(position);
+//                playMusicItem(currentMusicItem, true);
+//                sendInfo();
+//            }
+//        }
+//    }
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if(TextUtils.equals(action, "itemClick")){
-                int position = intent.getIntExtra("position", 0);
-                currentMusicItem = MusicItemList.getMusicItemList().get(position);
-                playMusicItem(currentMusicItem, true);
-                sendInfo();
-            }
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(musicActivityBroadcastReceiver);
-    }
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//        unregisterReceiver(musicActivityBroadcastReceiver);
+//    }
 }
